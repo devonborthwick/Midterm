@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Midterm</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="leaflet-ruler-master\src\leaflet-ruler.css"/>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js" integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA==" crossorigin=""></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+	<script src="leaflet-ruler-master\src\leaflet-ruler.js"></script>
+	<style>
+	body {
+		padding: 0;
+		margin: 0;
+	}
+	html, body, #map {
+		height: 100%;
+		width: 100%;}
+	</style>
+	
+</head>
+<body>
+
+<div id='map'></div>
+
+<script>
+var NatParks = "parks.geojson";
+var Airport = "airports.geojson";
+
+		var map = L.map('map').setView([37.52715,-96.877441], 4); 
+
+	var osm=new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',{ 
+				attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'})
+				.addTo(map);
+	
+	
+		
+
+	var  geojsonMarkerOptions = {
+        'radius':4,
+		'opacity': 1,
+		'color': "green",
+		'fillColor':  "green",
+		'fillOpacity': 1
+	};
+	var parks = L.geoJSON(null, {
+			onEachFeature: forEachFeature, 
+			pointToLayer: function (feature, latlng) {
+				return L.circleMarker(latlng, geojsonMarkerOptions);
+			}
+	  }); 
+
+	function forEachFeature(feature, layer) {
+	
+			var popupContentParks = "<p>Park:</br>" +
+				feature.properties.Name + "</br>" +"Location:" + feature.geometry.coordinates;
+			
+							
+			if (feature.properties && feature.properties.popupContentParks) {
+				popupContentParks += feature.properties.popupContentParks;
+			}
+				layer.bindPopup(popupContentParks);
+	};
+
+
+ 
+        $.getJSON(NatParks, function(data) {
+			parks.addData(data);
+		});
+	
+	
+	parks.addTo(map);
+
+
+
+    var  geojsonMarkerOptions1 = {
+        'radius':.5,
+		'opacity': 1,
+		'color': "purple",
+		'fillColor':  "purple",
+		'fillOpacity': 1
+	};
+
+	{function forEachFeature(feature, layer) {
+	
+			var popupContentAirport = "<p>Airport:</br>" + 
+					feature.properties.Name + "</br>" +"Location:" + feature.geometry.coordinates;
+							
+			if (feature.properties && feature.properties.popupContentAirport) {
+				popupContentAirport + feature.properties.popupContentAirport;
+			}
+				layer.bindPopup(popupContentAirport);
+	}};
+
+	 
+	  var airports = L.geoJSON(null, {
+			onEachFeature: forEachFeature, 
+			pointToLayer: function (feature, latlng) {
+				return L.circleMarker(latlng, geojsonMarkerOptions1);
+			}
+	  });
+
+	
+ 
+        $.getJSON(Airport, function(data) {
+			airports.addData(data);
+		});
+	
+	
+	airports.addTo(map);
+
+	var usgs = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}', {
+				maxZoom: 20,
+				attribution: 'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
+});			
+
+	var satellite = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
+				minZoom: 0,
+				maxZoom: 20,
+				attribution: '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+				ext: 'jpg'
+});
+
+
+	var baseMaps = {
+			"Open Street Map": osm,
+			"USGS Imagery": usgs,
+			"Satellite": satellite
+		}
+
+		var overlayMaps = {
+			"National Parks": parks,
+			"Airports": airports
+		}
+		
+	var layerControl =	L.control.layers(baseMaps, overlayMaps)
+	layerControl.addTo(map);
+	L.control.scale({
+		metric: true,
+		imperial: true,
+		maxWidth: 100,
+		position: "bottomleft"
+	}).addTo(map);
+
+	var options = {
+		position: "topright",
+		lengthUnit: {
+			label: "Distance:",
+			display: "km",
+			decimal: 2
+		}
+	};
+	L.control.ruler(options).addTo(map);
+
+</script>
+</body>
+</html>
